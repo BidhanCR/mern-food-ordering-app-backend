@@ -21,30 +21,47 @@ type CheckoutSessionRequest = {
   };
   restaurantId: string;
 };
-const stripeWebhookHandler = async(req:Request, res: Response)=> {
-  let event;
-try {
-  const sig = req.headers["stripe-signature"];
-  event = STRIPE.webhooks.constructEvent(req.body, sig as string, STRIPE_ENDPOINT_SECRET)
 
-  if(event.type === "checkout.session.completed"){
-    const order = await Order.findById(event.data.object.metadata?.orderId);
+const getMyOrders = async (req: Request, res: Response) => {
+  try {
+    const orders = await Order.find({ user: req.userId })
+      .populate("restaurant")
+      .populate("user");
 
-    if(!order){
-      return res.status(404).json({message: "Order not found"})
-    }
-
-    order.totalAmount = event.data.object.amount_total;
-
-    order.status = "paid";
-    await order.save();
+    res.json(orders);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "something went wrong" });
   }
-  res.status(200).send();
-} catch (error:any) {
-  console.log(error)
-  res.status(400).send(`Webhook error: ${error.message}`)
-}
-}
+};
+const stripeWebhookHandler = async (req: Request, res: Response) => {
+  let event;
+  try {
+    const sig = req.headers["stripe-signature"];
+    event = STRIPE.webhooks.constructEvent(
+      req.body,
+      sig as string,
+      STRIPE_ENDPOINT_SECRET
+    );
+
+    if (event.type === "checkout.session.completed") {
+      const order = await Order.findById(event.data.object.metadata?.orderId);
+
+      if (!order) {
+        return res.status(404).json({ message: "Order not found" });
+      }
+
+      order.totalAmount = event.data.object.amount_total;
+
+      order.status = "paid";
+      await order.save();
+    }
+    res.status(200).send();
+  } catch (error: any) {
+    console.log(error);
+    res.status(400).send(`Webhook error: ${error.message}`);
+  }
+};
 
 const createCheckoutSession = async (req: Request, res: Response) => {
   try {
@@ -150,5 +167,6 @@ const createSession = async (
 
 export default {
   createCheckoutSession,
-  stripeWebhookHandler
+  stripeWebhookHandler,
+  getMyOrders,
 };
