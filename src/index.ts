@@ -2,7 +2,6 @@ import express, { Request, Response } from "express";
 import cors from "cors";
 import "dotenv/config";
 import mongoose from "mongoose";
-import path from "path";
 import myUserRoute from "./routes/myUserRoutes";
 import myRestaurantRoute from "./routes/myRestaurantRoute";
 import RestaurantRoute from "./routes/RestaurantRoute";
@@ -34,13 +33,6 @@ app.use("/api/my/restaurant", myRestaurantRoute);
 app.use("/api/restaurant", RestaurantRoute);
 app.use("/api/order", OrderRoute);
 
-// Serve static files (like index.html) from the 'build' directory
-app.use(express.static(path.join(__dirname, "../dist")));
-
-// Route all other requests to the React application
-app.get("*", (req: Request, res: Response) => {
-  res.sendFile(path.join(__dirname, "../dist", "index.html"));
-});
 
 app.listen(7000, () => {
   console.log("server started on localhost:7000");
