@@ -35,11 +35,11 @@ app.use("/api/restaurant", RestaurantRoute);
 app.use("/api/order", OrderRoute);
 
 // Serve static files (like index.html) from the 'build' directory
-app.use(express.static(path.join(__dirname, "dist")));
+app.use(express.static(path.join(__dirname, "../dist")));
 
 // Route all other requests to the React application
 app.get("*", (req: Request, res: Response) => {
-  res.sendFile(path.join(__dirname, "dist", "index.html"));
+  res.sendFile(path.join(__dirname, "../dist", "index.html"));
 });
 
 app.listen(7000, () => {
